@@ -23,7 +23,6 @@ export class CheckinsService {
       this.prisma.exerciseRecord.findMany({
         where: {
           userId,
-          type: 'walkDog',
           isCompleted: true,
           duration: { gte: CHECKIN_MIN_SEC },
           startTime: {
@@ -91,8 +90,8 @@ export class CheckinsService {
   // ⑲ POST /checkins/makeup
   async makeup(userId: string, date: string) {
     const today = toCstDate();
-    if (date > today) {
-      throw new BusinessException(ErrorCodes.INVALID_PARAM, '日期不能晚于今天');
+    if (date >= today) {
+      throw new BusinessException(ErrorCodes.INVALID_PARAM, '只能补签过去的日期');
     }
     const checked = await this.checkedDateSet(userId, date, date);
     if (checked.has(date)) {

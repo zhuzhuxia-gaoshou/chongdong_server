@@ -4,7 +4,7 @@ import { IsOptional, IsString, Length, MaxLength } from 'class-validator';
 export class UpdateUserDto {
   @IsOptional()
   @IsString()
-  @Length(1, 12)
+  @Length(1, 64) // 长度语义在 service trim 后校验（契约：去首尾空格后 1–12 字）
   nickname?: string;
 
   @IsOptional()

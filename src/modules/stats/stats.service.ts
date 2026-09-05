@@ -157,7 +157,6 @@ export class StatsService {
       this.prisma.exerciseRecord.findMany({
         where: {
           userId,
-          type: 'walkDog',
           isCompleted: true,
           duration: { gte: CHECKIN_MIN_SEC },
           startTime: {

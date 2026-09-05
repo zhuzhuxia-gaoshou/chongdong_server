@@ -5,13 +5,15 @@ import {
   IsInt,
   IsNumber,
   IsOptional,
+  IsPositive,
   IsString,
-  Min,
+  Length,
 } from 'class-validator';
 
 /** 新增宠物入参（契约 §4.4 ⑨：name/species/breed/gender/weight/birthDate 必填）。 */
 export class CreatePetDto {
   @IsString()
+  @Length(1, 10) // DB 列 VarChar(10)
   name!: string;
 
   @IsEnum(['dog', 'cat'])
@@ -28,11 +30,10 @@ export class CreatePetDto {
   ageYears?: number;
 
   @IsString()
-  @IsOptional()
-  birthDate?: string; // yyyy-MM-dd
+  birthDate!: string; // yyyy-MM-dd（契约：必填）
 
   @IsNumber()
-  @Min(0)
+  @IsPositive() // 契约：weight > 0
   weight!: number;
 
   @IsString()

@@ -132,8 +132,9 @@ export class AuthService {
   }
 
   private async issueTokens(userId: string): Promise<TokenBundle> {
-    const accessTtl = this.config.get<number>('ACCESS_TOKEN_TTL', 604800);
-    const refreshTtl = this.config.get<number>('REFRESH_TOKEN_TTL', 2592000);
+    // env 读取值恒为 string，jsonwebtoken 会把纯数字串按毫秒解释——必须强转 number
+    const accessTtl = Number(this.config.get<number>('ACCESS_TOKEN_TTL', 604800));
+    const refreshTtl = Number(this.config.get<number>('REFRESH_TOKEN_TTL', 2592000));
     const accessSecret = this.config.get<string>('JWT_ACCESS_SECRET');
     const refreshSecret = this.config.get<string>('JWT_REFRESH_SECRET');
 

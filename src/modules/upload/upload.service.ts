@@ -55,7 +55,7 @@ export class UploadService {
       'http://localhost:8080',
     );
     return {
-      url: `${base}/static/uploads/${businessType}/${filename}`,
+      url: `${base}/static/${businessType}/${filename}`,
       fileSize: file.size,
     };
   }

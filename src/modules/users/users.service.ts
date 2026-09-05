@@ -26,12 +26,16 @@ export class UsersService {
     if (dto.nickname === undefined && dto.avatarUrl === undefined) {
       throw new BusinessException(ErrorCodes.INVALID_PARAM, '至少传一项');
     }
+    // 契约 §4.3 ⑦：trim 后 1–12 字符，否则 40002
+    const nickname =
+      dto.nickname !== undefined ? dto.nickname.trim() : undefined;
+    if (nickname !== undefined && (nickname.length < 1 || nickname.length > 12)) {
+      throw new BusinessException(ErrorCodes.INVALID_NICKNAME);
+    }
     const u = await this.prisma.user.update({
       where: { id: userId },
       data: {
-        ...(dto.nickname !== undefined
-          ? { nickname: dto.nickname.trim() }
-          : {}),
+        ...(nickname !== undefined ? { nickname } : {}),
         ...(dto.avatarUrl !== undefined ? { avatarUrl: dto.avatarUrl } : {}),
       },
     });

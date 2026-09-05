@@ -1,5 +1,6 @@
 import { Type } from 'class-transformer';
 import {
+  ArrayMaxSize,
   IsArray,
   IsBoolean,
   IsDateString,
@@ -74,6 +75,7 @@ export class CreateRecordDto {
   isManual?: boolean;
 
   @IsArray()
+  @ArrayMaxSize(5000) // 契约 §4.6 ⑭：上限 5000 点，超出由前端抽稀
   @ValidateNested({ each: true })
   @Type(() => GeoPointDto)
   @IsOptional()
