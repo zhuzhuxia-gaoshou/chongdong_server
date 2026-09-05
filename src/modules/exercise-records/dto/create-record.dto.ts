@@ -40,6 +40,18 @@ export class CreateRecordDto {
   @IsEnum(['walkDog', 'catPlay'])
   type!: 'walkDog' | 'catPlay';
 
+  @IsString()
+  @IsOptional()
+  @IsIn([
+    'featherWand',
+    'laserPointer',
+    'yarnBall',
+    'electricMouse',
+    'bouncyBall',
+    'boxAdventure',
+  ])
+  catPlayType?: string; // 猫玩玩法，仅 type=catPlay 携带
+
   @IsDateString()
   startTime!: string;
 

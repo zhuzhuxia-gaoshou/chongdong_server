@@ -78,6 +78,7 @@ model ExerciseRecord {
   petId          String
   userId         String
   type           ExerciseType
+  catPlayType    String?  // 猫玩玩法（仅 type=catPlay 有值：featherWand 等 6 种）
   startTime      DateTime
   endTime        DateTime
   duration       Int      // 秒

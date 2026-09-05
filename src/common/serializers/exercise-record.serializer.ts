@@ -16,6 +16,7 @@ export interface ExerciseRecordDto {
   petId: string;
   userId: string;
   type: 'walkDog' | 'catPlay';
+  catPlayType: string | null; // 猫玩玩法，仅 type=catPlay 有值
   startTime: string;
   endTime: string;
   duration: number; // 秒
@@ -67,6 +68,7 @@ export function serializeRecord(
     petId: rec.petId,
     userId: rec.userId,
     type: rec.type,
+    catPlayType: rec.catPlayType,
     startTime: toCstIso(rec.startTime),
     endTime: toCstIso(rec.endTime),
     duration: rec.duration,

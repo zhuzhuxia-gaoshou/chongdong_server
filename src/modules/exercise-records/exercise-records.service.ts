@@ -83,6 +83,7 @@ export class ExerciseRecordsService {
           petId: dto.petId,
           userId,
           type: dto.type,
+          catPlayType: dto.catPlayType ?? null,
           startTime,
           endTime,
           duration: dto.duration,
