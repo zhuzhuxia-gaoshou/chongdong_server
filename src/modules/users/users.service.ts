@@ -23,7 +23,11 @@ export class UsersService {
 
   // ⑦ PATCH /users/me
   async updateMe(userId: string, dto: UpdateUserDto): Promise<UserDto> {
-    if (dto.nickname === undefined && dto.avatarUrl === undefined) {
+    if (
+      dto.nickname === undefined &&
+      dto.avatarUrl === undefined &&
+      dto.isPublicRank === undefined
+    ) {
       throw new BusinessException(ErrorCodes.INVALID_PARAM, '至少传一项');
     }
     // 契约 §4.3 ⑦：trim 后 1–12 字符，否则 40002
@@ -37,6 +41,9 @@ export class UsersService {
       data: {
         ...(nickname !== undefined ? { nickname } : {}),
         ...(dto.avatarUrl !== undefined ? { avatarUrl: dto.avatarUrl } : {}),
+        ...(dto.isPublicRank !== undefined
+          ? { isPublicRank: dto.isPublicRank }
+          : {}),
       },
     });
     return serializeUser(u);

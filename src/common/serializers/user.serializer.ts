@@ -11,6 +11,7 @@ export interface UserDto {
   totalExerciseCount: number;
   streakDays: number;
   signCardCount: number;
+  isPublicRank: boolean; // 隐私设置：公开排行榜参与开关
 }
 
 export function maskPhone(phone: string): string {
@@ -28,5 +29,6 @@ export function serializeUser(u: User): UserDto {
     totalExerciseCount: u.totalExerciseCount,
     streakDays: u.streakDays,
     signCardCount: u.signCardCount,
+    isPublicRank: u.isPublicRank,
   };
 }

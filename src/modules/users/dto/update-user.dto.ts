@@ -1,4 +1,4 @@
-import { IsOptional, IsString, Length, MaxLength } from 'class-validator';
+import { IsBoolean, IsOptional, IsString, Length, MaxLength } from 'class-validator';
 
 /** PATCH /api/v1/users/me（契约 §4.3 ⑦）：均可选，至少传一项。 */
 export class UpdateUserDto {
@@ -11,4 +11,8 @@ export class UpdateUserDto {
   @IsString()
   @MaxLength(2048)
   avatarUrl?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  isPublicRank?: boolean; // 隐私设置：公开排行榜参与开关
 }

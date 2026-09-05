@@ -36,6 +36,7 @@ model User {
   totalExerciseCount Int      @default(0) // 服务端统计，不接受客户端上报
   streakDays         Int      @default(0) // 连续打卡天数，服务端计算
   signCardCount      Int      @default(3) // 补签卡余量，初始 3
+  isPublicRank       Boolean  @default(true) // 隐私设置：是否参与公开排行榜（设置页开关）
 
   pets       Pet[]
   records    ExerciseRecord[]

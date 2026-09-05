@@ -45,20 +45,31 @@ export class RankingService {
     const users =
       members.length > 0
         ? await this.prisma.user.findMany({
-            where: { id: { in: members.map((m) => m.userId) } },
+            // 读取侧过滤：缓存窗口（≤5 分钟）内关闭公开排行榜的用户立即消失
+            where: {
+              id: { in: members.map((m) => m.userId) },
+              isPublicRank: true,
+            },
             select: { id: true, nickname: true, avatarUrl: true },
           })
         : [];
     const userMap = new Map(users.map((u) => [u.id, u]));
 
-    const list: RankingItem[] = members.map((m, idx) => ({
-      rank: idx + 1,
-      userId: m.userId,
-      nickname: userMap.get(m.userId)?.nickname ?? '铲屎官',
-      avatarUrl: userMap.get(m.userId)?.avatarUrl ?? null,
-      value: m.value,
-      isMe: m.userId === userId,
-    }));
+    const list: RankingItem[] = [];
+    let rank = 0;
+    for (const m of members) {
+      const u = userMap.get(m.userId);
+      if (!u) continue; // 已关闭公开排行或已注销，不占名次
+      rank += 1;
+      list.push({
+        rank,
+        userId: m.userId,
+        nickname: u.nickname,
+        avatarUrl: u.avatarUrl,
+        value: m.value,
+        isMe: m.userId === userId,
+      });
+    }
 
     const me = await this.buildMe(userId, key);
     const updatedAt = (await r.get(buildKey)) ?? toCstIso();
@@ -116,9 +127,22 @@ export class RankingService {
       map.set(row.userId, (map.get(row.userId) ?? 0) + row.duration);
     }
 
+    // 隐私过滤：关闭「公开排行榜」的用户不入榜（设置页开关，经 PATCH /users/me 同步）
+    const visible = new Set(
+      map.size
+        ? (
+            await this.prisma.user.findMany({
+              where: { id: { in: [...map.keys()] }, isPublicRank: true },
+              select: { id: true },
+            })
+          ).map((u) => u.id)
+        : [],
+    );
+
     const multi = r.multi();
     multi.del(key);
     for (const [uid, sec] of map) {
+      if (!visible.has(uid)) continue;
       multi.zadd(key, Math.round(sec / 60), uid);
     }
     multi.set(buildKey, toCstIso(), 'EX', CACHE_TTL);
