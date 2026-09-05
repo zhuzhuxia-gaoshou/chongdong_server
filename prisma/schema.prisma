@@ -1,0 +1,150 @@
+// 宠动Keep · 数据模型基线 v1.0（规范 §五 / 契约 §三 DTO）
+// 字段名与前端 Dart 模型一致；可扩充字段，不可改名/删除/改变语义。
+// ID 一律字符串（u_/p_/r_ + ULID）；枚举出网为字符串。
+// 注：打卡判定由服务端基于 exercise_records 运行时计算，不建 checkins 表。
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum Species {
+  dog
+  cat
+}
+
+enum Gender {
+  male
+  female
+}
+
+enum ExerciseType {
+  walkDog
+  catPlay
+}
+
+model User {
+  id                 String   @id
+  phone              String   @unique
+  nickname           String   @db.VarChar(12)
+  avatarUrl          String?
+  createdAt          DateTime @default(now())
+  totalExerciseCount Int      @default(0) // 服务端统计，不接受客户端上报
+  streakDays         Int      @default(0) // 连续打卡天数，服务端计算
+  signCardCount      Int      @default(3) // 补签卡余量，初始 3
+
+  pets       Pet[]
+  records    ExerciseRecord[]
+  userBadges UserBadge[]
+  makeupCheckins MakeupCheckin[]
+
+  @@map("users")
+}
+
+model Pet {
+  id                String    @id
+  userId            String
+  name              String    @db.VarChar(10)
+  species           Species
+  breed             String
+  gender            Gender
+  ageYears          Int?
+  birthDate         DateTime?
+  weight            Float
+  avatarUrl         String?
+  allergies         Json      @default("[]")
+  chronicConditions Json      @default("[]")
+  isNeutered        Boolean   @default(false)
+  isVaccinated      Boolean   @default(false)
+  emergencyContact  String?
+  deletedAt         DateTime? // 软删除（契约 §4.4 ⑫）
+  createdAt         DateTime  @default(now())
+
+  user    User              @relation(fields: [userId], references: [id])
+  records ExerciseRecord[]
+
+  @@index([userId])
+  @@map("pets")
+}
+
+model ExerciseRecord {
+  id             String   @id
+  clientRecordId String   // 幂等键（契约 §4.6 ⑭）
+  petId          String
+  userId         String
+  type           ExerciseType
+  startTime      DateTime
+  endTime        DateTime
+  duration       Int      // 秒
+  distance       Float    // 公里
+  steps          Int
+  locationName   String?
+  startPhotoUrl  String?
+  isCompleted    Boolean  @default(true)
+  isManual       Boolean  @default(false)
+  isAudited      Boolean  @default(false) // 时长与起止差值偏差>30% 采信但审计标记
+  createdAt      DateTime @default(now())
+
+  pet   Pet          @relation(fields: [petId], references: [id])
+  user  User         @relation(fields: [userId], references: [id])
+  route RoutePoint[]
+
+  @@unique([petId, clientRecordId]) // 幂等：同 petId 下 clientRecordId 唯一
+  @@index([userId])
+  @@index([startTime])
+  @@map("exercise_records")
+}
+
+model RoutePoint {
+  id        BigInt   @id @default(autoincrement())
+  recordId  String
+  latitude  Decimal  @db.Decimal(10, 6) // WGS-84，保留 6 位
+  longitude Decimal  @db.Decimal(10, 6)
+  timestamp DateTime
+  accuracy  Float?
+
+  record ExerciseRecord @relation(fields: [recordId], references: [id], onDelete: Cascade)
+
+  @@index([recordId])
+  @@map("route_points")
+}
+
+model Badge {
+  id          String @id
+  name        String
+  emoji       String
+  description String
+  userBadges UserBadge[]
+
+  @@map("badges")
+}
+
+model UserBadge {
+  userId     String
+  badgeId    String
+  unlockedAt DateTime @default(now())
+
+  user  User  @relation(fields: [userId], references: [id])
+  badge Badge @relation(fields: [badgeId], references: [id])
+
+  @@id([userId, badgeId])
+  @@map("user_badges")
+}
+
+// 补签覆盖记录（契约 §4.7 ⑲：使用补签卡人工标记某日已打卡）
+// 常规打卡由 exercise_records 运行时计算、不建 checkins 表；补签是显式人工操作，单独存表
+model MakeupCheckin {
+  userId    String
+  date      String   // yyyy-MM-dd，东八区自然日
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@unique([userId, date]) // 同用户同日只能补签一次
+  @@index([userId])
+  @@map("makeup_checkins")
+}
